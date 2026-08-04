@@ -60,7 +60,8 @@ button:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible,
-summary:focus-visible {
+summary:focus-visible,
+a:focus-visible {
   outline: 3px solid rgba(49, 87, 164, 0.25);
   outline-offset: 2px;
 }
@@ -138,6 +139,34 @@ h1 {
   background: var(--accent);
   font-size: 0.84rem;
   font-weight: 720;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.home-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 13px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--accent);
+  background: var(--accent-soft);
+  font-size: 0.84rem;
+  font-weight: 720;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.home-button svg {
+  width: 15px;
+  height: 15px;
+  flex: 0 0 auto;
 }
 
 .mode-tabs {
