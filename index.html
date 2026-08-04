@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#3157a4" />
+    <meta name="description" content="Calculate final solution volumes for one or many weighed samples." />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Molarity Calculator" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./icons/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./icons/icon-192.png" />
+    <link rel="stylesheet" href="./styles.css" />
+    <title>Molarity Calculator</title>
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="app-header">
+        <div class="brand">
+          <img src="./icons/icon.svg" width="38" height="38" alt="" />
+          <div>
+            <h1>Molarity Calculator</h1>
+            <p>Final-volume calculator</p>
+          </div>
+        </div>
+        <button id="installButton" class="install-button" type="button" hidden>Install</button>
+      </header>
+
+      <nav class="mode-tabs" aria-label="Calculator mode">
+        <button type="button" data-mode="batch" class="is-active" aria-pressed="true">Batch</button>
+        <button type="button" data-mode="individual" aria-pressed="false">Individual</button>
+      </nav>
+
+      <section id="batchMode" class="calculator-panel" aria-label="Batch calculator">
+        <div class="setup-grid">
+          <label class="field compound-field">
+            <span>Compound <small>optional</small></span>
+            <input id="compoundName" type="text" list="compoundPresets" placeholder="e.g. NaBH₄" autocomplete="off" />
+            <datalist id="compoundPresets"></datalist>
+          </label>
+
+          <label class="field">
+            <span>Molar mass</span>
+            <div class="input-with-unit fixed-unit">
+              <input id="batchMolarMass" type="number" inputmode="decimal" min="0" step="any" placeholder="37.83" />
+              <span>g/mol</span>
+            </div>
+          </label>
+
+          <label class="field">
+            <span>Target molarity</span>
+            <div class="input-with-select">
+              <input id="batchMolarity" type="number" inputmode="decimal" min="0" step="any" placeholder="1.00" />
+              <select id="batchMolarityUnit" aria-label="Batch molarity unit">
+                <option value="uM">µM</option>
+                <option value="mM" selected>mM</option>
+                <option value="M">M</option>
+              </select>
+            </div>
+          </label>
+
+          <label class="field compact-field">
+            <span>Mass unit</span>
+            <select id="batchMassUnit">
+              <option value="ug">µg</option>
+              <option value="mg" selected>mg</option>
+              <option value="g">g</option>
+            </select>
+          </label>
+
+          <label class="field compact-field">
+            <span>Result unit</span>
+            <select id="batchVolumeUnit">
+              <option value="uL" selected>µL</option>
+              <option value="mL">mL</option>
+              <option value="L">L</option>
+            </select>
+          </label>
+
+          <label class="field compact-field">
+            <span>Decimals</span>
+            <select id="batchDecimals">
+              <option value="0">0</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3" selected>3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+              <option value="6">6</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="samples-heading">
+          <div>
+            <h2>Samples</h2>
+            <p id="batchStatus" aria-live="polite">Enter molar mass and molarity</p>
+          </div>
+          <button id="addSample" class="secondary-button" type="button">+ Add</button>
+        </div>
+
+        <div class="sample-column-labels" aria-hidden="true">
+          <span>Sample</span>
+          <span id="weightColumnLabel">Weight (mg)</span>
+          <span id="volumeColumnLabel">Final volume (µL)</span>
+          <span></span>
+        </div>
+        <div id="sampleRows" class="sample-rows"></div>
+
+        <details class="paste-panel">
+          <summary>Paste weights</summary>
+          <div class="paste-content">
+            <label for="pastedWeights">One weight per line</label>
+            <textarea id="pastedWeights" rows="4" placeholder="42.1&#10;39.8&#10;44.3"></textarea>
+            <p id="pasteStatus" class="paste-status" aria-live="polite"></p>
+            <button id="usePastedWeights" class="primary-button" type="button">Use weights</button>
+          </div>
+        </details>
+
+        <div class="batch-actions">
+          <button id="copyResults" class="primary-button" type="button" disabled>Copy results</button>
+          <button id="clearBatch" class="text-button" type="button">Clear</button>
+        </div>
+      </section>
+
+      <section id="individualMode" class="calculator-panel" aria-label="Individual calculator" hidden>
+        <div class="solver-fields">
+          <label class="solver-field" data-field="mass">
+            <span>Mass</span>
+            <div class="input-with-select">
+              <input id="individualMass" type="number" inputmode="decimal" min="0" step="any" />
+              <select id="individualMassUnit" aria-label="Individual mass unit">
+                <option value="ug">µg</option>
+                <option value="mg" selected>mg</option>
+                <option value="g">g</option>
+              </select>
+            </div>
+          </label>
+
+          <label class="solver-field" data-field="molarMass">
+            <span>Molar mass</span>
+            <div class="input-with-unit fixed-unit">
+              <input id="individualMolarMass" type="number" inputmode="decimal" min="0" step="any" />
+              <span>g/mol</span>
+            </div>
+          </label>
+
+          <label class="solver-field" data-field="molarity">
+            <span>Molarity</span>
+            <div class="input-with-select">
+              <input id="individualMolarity" type="number" inputmode="decimal" min="0" step="any" />
+              <select id="individualMolarityUnit" aria-label="Individual molarity unit">
+                <option value="uM">µM</option>
+                <option value="mM" selected>mM</option>
+                <option value="M">M</option>
+              </select>
+            </div>
+          </label>
+
+          <label class="solver-field" data-field="volume">
+            <span>Final volume</span>
+            <div class="input-with-select">
+              <input id="individualVolume" type="number" inputmode="decimal" min="0" step="any" />
+              <select id="individualVolumeUnit" aria-label="Individual volume unit">
+                <option value="uL" selected>µL</option>
+                <option value="mL">mL</option>
+                <option value="L">L</option>
+              </select>
+            </div>
+          </label>
+        </div>
+
+        <div class="solver-footer">
+          <label>
+            <span>Decimals</span>
+            <select id="individualDecimals">
+              <option value="0">0</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3" selected>3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+              <option value="6">6</option>
+            </select>
+          </label>
+          <button id="clearIndividual" class="text-button" type="button">Clear</button>
+        </div>
+
+        <output id="individualStatus" class="solver-status" aria-live="polite" hidden></output>
+      </section>
+
+      <footer>
+        <span>Final solution volume</span>
+        <span id="offlineStatus">Ready</span>
+      </footer>
+    </main>
+
+    <script defer src="./calculator.js"></script>
+    <script defer src="./compounds.js"></script>
+    <script defer src="./app.js"></script>
+  </body>
+</html>

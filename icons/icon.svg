@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Molarity Calculator">
+  <defs>
+    <linearGradient id="bg" x1="76" y1="54" x2="438" y2="458" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#5276c5"/>
+      <stop offset="1" stop-color="#254485"/>
+    </linearGradient>
+    <linearGradient id="liquid" x1="256" y1="274" x2="256" y2="394" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#b9dcff"/>
+      <stop offset="1" stop-color="#75b8ed"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="116" fill="url(#bg)"/>
+  <path d="M210 106h92M227 106v109l-78 130c-17 29 4 65 38 65h138c34 0 55-36 38-65l-78-130V106" fill="none" stroke="#f5f8ff" stroke-width="25" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M181 324h150l25 42c10 17-2 38-22 38H178c-20 0-32-21-22-38l25-42Z" fill="url(#liquid)"/>
+  <circle cx="215" cy="276" r="13" fill="#dff1ff"/>
+  <circle cx="284" cy="251" r="11" fill="#dff1ff"/>
+  <circle cx="304" cy="295" r="8" fill="#dff1ff"/>
+</svg>
