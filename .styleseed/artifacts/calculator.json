@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "id": "calculator",
+  "target": { "kind": "route", "locator": "/" },
+  "selection": {
+    "grammar": "technical-instrument",
+    "adapter": "product-ui",
+    "domain": "productivity",
+    "page": "form",
+    "recipe": "developer-platform",
+    "palette": "cobalt-instrument",
+    "profile": "technical",
+    "fallback": "technical-instrument"
+  },
+  "decisions": {
+    "primaryDecision": "What final volume does each weighed sample need for the target molarity.",
+    "primaryAction": "Read the per-sample final volumes.",
+    "signatureMove": "A hairline-separated sample table where the computed volume is the only emphasised column."
+  },
+  "implementation": { "sourceRoots": ["index.html", "app.js"], "tokenFiles": ["styles.css"] },
+  "validation": {
+    "scoreFloor": 85,
+    "requiredRenders": [
+      { "id": "narrow-light", "state": "loaded", "viewport": { "width": 390, "height": 844 } },
+      { "id": "wide-light", "state": "loaded", "viewport": { "width": 1280, "height": 900 } },
+      { "id": "narrow-error", "state": "error", "viewport": { "width": 390, "height": 844 } }
+    ],
+    "temporal": { "required": false, "scenarios": [] },
+    "humanAcceptance": true
+  }
+}

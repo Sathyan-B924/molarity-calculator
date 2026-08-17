@@ -1,0 +1,141 @@
+{
+  "schemaVersion": 2,
+  "artifactId": "calculator",
+  "engineVersion": "4.0.0",
+  "engineRevision": "sha256:b4c9fe60d350f02774133d8b9958160f4fa8b277c9a4168cb6a5826a369d1f86",
+  "distributionIntegrity": "verified",
+  "selection": {
+    "agent": "claude",
+    "grammar": "technical-instrument",
+    "grammarSource": "built-in:technical-instrument",
+    "referenceContract": null,
+    "fallback": "technical-instrument",
+    "adapter": "product-ui",
+    "domain": "productivity",
+    "page": "form",
+    "recipe": "developer-platform",
+    "recipeSelection": "developer-platform",
+    "palette": "cobalt-instrument",
+    "paletteSelection": "cobalt-instrument",
+    "paletteGeneration": {
+      "keyColor": "#175CD3",
+      "mode": "light",
+      "character": "deep",
+      "harmony": "auto",
+      "temperature": "cool"
+    },
+    "profile": "technical"
+  },
+  "inputs": [
+    {
+      "id": "project",
+      "path": ".styleseed/project.json",
+      "sha256": "sha256:c3d602e7eadc1ec8833755e11015b7ff00235cf1e37ce5e74ebb547002aef13f",
+      "bytes": 728
+    },
+    {
+      "id": "artifact",
+      "path": ".styleseed/artifacts/calculator.json",
+      "sha256": "sha256:e56a1fcd45024fdd8bf02591bb50c9c0af7f21c2a84b8dcef2d296f308bed7c0",
+      "bytes": 1210
+    }
+  ],
+  "sources": [
+    {
+      "id": "agent-execution",
+      "path": "catalog:agents",
+      "sha256": "sha256:5706f16dd770b76a5e92216812c29f69de43b3d6d3ead1e26f8d2b09a3209cc9",
+      "bytes": 283
+    },
+    {
+      "id": "core",
+      "path": "catalog:core",
+      "sha256": "sha256:6002465c13e879fb190387117049eb4484a3ce908c9f8af1648882c870194266",
+      "bytes": 5394
+    },
+    {
+      "id": "grammar",
+      "path": "built-in:technical-instrument",
+      "sha256": "sha256:d1c0daadd01bb0bd9c507edf377ecf1c5a1f906132711752557ed1318cf83dee",
+      "bytes": 903
+    },
+    {
+      "id": "adapter",
+      "path": "catalog:adapters/product-ui",
+      "sha256": "sha256:7b5b5c34b0b235dca329e6384ccb94c66ee65a348bbe7142277ae7bbda3c13b0",
+      "bytes": 714
+    },
+    {
+      "id": "domain",
+      "path": "catalog:domains/productivity",
+      "sha256": "sha256:1bfc83fec1a7775961f2a26101110570379ddab0dcc50fca0af731336b7d4b09",
+      "bytes": 936
+    },
+    {
+      "id": "page",
+      "path": "catalog:pages/form",
+      "sha256": "sha256:e1ae22492bcb3986ff8884ea84c22335e4823925cccec472b862262fb16ef116",
+      "bytes": 940
+    },
+    {
+      "id": "recipe",
+      "path": "catalog:recipes/developer-platform",
+      "sha256": "sha256:69854f65ad674e20973e08c03f95aaf6fe5a794a9c6fb6f696f6a9bd57a87053",
+      "bytes": 1216
+    },
+    {
+      "id": "palette",
+      "path": "catalog:palettes/cobalt-instrument",
+      "sha256": "sha256:14a53604b6f087f4c30c776396136692c1662fc067c87a663a1ff5e6101ec70e",
+      "bytes": 2221
+    },
+    {
+      "id": "profile",
+      "path": "catalog:profiles/technical",
+      "sha256": "sha256:6a496b751cc029ee5eec99146354ca3db1b85f22801dcdae56846c5ff49e5167",
+      "bytes": 311
+    },
+    {
+      "id": "craft",
+      "path": "catalog:craft",
+      "sha256": "sha256:9f8b9c38d3ec1dc6d476a149b7c3502b27c51cbb55bce397a696b44335a22d21",
+      "bytes": 3564
+    }
+  ],
+  "methodHash": "sha256:f4e990c329b978727a0e599ab76999a2f5d42e9c80b6b42f3e48af443c963a08",
+  "validationHash": "sha256:ad6129dc46d7c8456337363a0d917bbbdc5d86a9f1bad0ace0db3a7f6315ac84",
+  "validationSlices": {
+    "target": "sha256:fd89b3b7c61fa08e9a1055ecd5c5678651b23752e9a5d07d80a2fb7f5ac1ae14",
+    "implementation": "sha256:9fa7d301ba22975fb58aed7e82b2634c96dc33bc06d83294ef3e2380b7669260",
+    "scoreFloor": "sha256:b4944c6ff08dc6f43da2e9c824669b7d927dd1fa976fadc7b456881f51bf5ccc",
+    "requiredRenders": "sha256:852c827df7f7e1caf9ffbc4f9ec3f53ff4eaa1bb6560a443acc1dacf7a803660",
+    "temporal": "sha256:c5ec5a78d8447626a8d2c39addbf2843320eb8e491b9e7c1e92927a135b06bba",
+    "humanAcceptance": "sha256:b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b"
+  },
+  "bundle": {
+    "kind": "bundle",
+    "path": ".styleseed/bundles/calculator.md",
+    "sha256": "sha256:3febf83f9e89ac40b41c1c2b64c188073d1b9d519489d6ccbc33c45cf04d41a8",
+    "bytes": 17409
+  },
+  "outputs": [
+    {
+      "kind": "bundle",
+      "path": ".styleseed/bundles/calculator.md",
+      "sha256": "sha256:3febf83f9e89ac40b41c1c2b64c188073d1b9d519489d6ccbc33c45cf04d41a8",
+      "bytes": 17409
+    },
+    {
+      "kind": "palette-json",
+      "path": ".styleseed/palettes/calculator.json",
+      "sha256": "sha256:289044848f37340fdfd52421060e54d75b2aeea845ac409f8b22a1342f5716be",
+      "bytes": 5902
+    },
+    {
+      "kind": "palette-css",
+      "path": ".styleseed/palettes/calculator.css",
+      "sha256": "sha256:67ed2bbee1989e8a1fc6dd275c77991c9fa2a19b93cde0a2d5a39aea80e344e0",
+      "bytes": 1157
+    }
+  ]
+}

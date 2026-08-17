@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "projectId": "molarity-calculator",
+  "defaults": {
+    "agent": "claude",
+    "domain": "productivity",
+    "adapter": "product-ui",
+    "recipe": "developer-platform",
+    "palette": "cobalt-instrument",
+    "profile": "technical",
+    "fallback": "technical-instrument"
+  },
+  "brand": {
+    "keyColor": "#175CD3",
+    "paletteCharacter": "deep",
+    "paletteMode": "light",
+    "paletteHarmony": "auto",
+    "surfaceTemperature": "cool",
+    "fontFamilies": [
+      "Inter",
+      "ui-monospace"
+    ],
+    "radius": "restrained",
+    "elevation": "tonal",
+    "density": "compact",
+    "motion": {
+      "seed": "snap",
+      "intensity": "restrained"
+    },
+    "imageryRole": "data-first"
+  }
+}
