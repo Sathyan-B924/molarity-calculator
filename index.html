@@ -48,8 +48,27 @@
         <div class="setup-grid">
           <label class="field compound-field">
             <span>Compound <small>optional</small></span>
-            <input id="compoundName" type="text" list="compoundPresets" placeholder="e.g. NaBH₄" autocomplete="off" />
-            <datalist id="compoundPresets"></datalist>
+            <div class="compound-combobox">
+              <input
+                id="compoundName"
+                type="text"
+                placeholder="Start typing — e.g. borohydride, 4-NP, tris"
+                autocomplete="off"
+                role="combobox"
+                aria-expanded="false"
+                aria-controls="compoundSuggestions"
+                aria-autocomplete="list"
+              />
+              <ul
+                id="compoundSuggestions"
+                class="compound-suggestions"
+                role="listbox"
+                aria-label="Compound suggestions"
+                hidden
+              ></ul>
+            </div>
+            <div id="compoundSave" class="compound-save" role="status" hidden></div>
+            <div id="compoundSaved" class="compound-saved" hidden></div>
           </label>
 
           <label class="field">

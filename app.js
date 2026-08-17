@@ -1,15 +1,28 @@
 (() => {
   const {
     calculateFinalVolume,
+    compoundSaveIntent,
+    compoundSearchKey,
     consistencyDifference,
+    findCompound,
+    forgetCompound,
     formatResult,
+    mergeCompoundSources,
     positiveNumber,
+    rememberCompound,
+    sanitizeCompoundHistory,
+    searchCompounds,
     solveMissing,
     unitLabel,
   } = globalThis.MolarityCalculator;
 
   const STORAGE_KEY = "molarity-calculator:v3";
   const compounds = globalThis.MOLARITY_COMPOUNDS ?? [];
+
+  /* Built-in presets plus whatever this bench has used before. */
+  function compoundLibrary() {
+    return mergeCompoundSources(compounds, state.compoundHistory);
+  }
   let rowCounter = 0;
 
   const elements = {
@@ -17,7 +30,9 @@
     batchMode: document.querySelector("#batchMode"),
     individualMode: document.querySelector("#individualMode"),
     compoundName: document.querySelector("#compoundName"),
-    compoundPresets: document.querySelector("#compoundPresets"),
+    compoundSuggestions: document.querySelector("#compoundSuggestions"),
+    compoundSave: document.querySelector("#compoundSave"),
+    compoundSaved: document.querySelector("#compoundSaved"),
     batchMolarMass: document.querySelector("#batchMolarMass"),
     batchMolarity: document.querySelector("#batchMolarity"),
     batchMolarityUnit: document.querySelector("#batchMolarityUnit"),
@@ -95,6 +110,7 @@
       decimals: 3,
       calculatedField: null,
     },
+    compoundHistory: [],
     deferredInstallPrompt: null,
   };
 
@@ -104,6 +120,7 @@
       if (!saved || typeof saved !== "object") return;
 
       if (["batch", "individual"].includes(saved.mode)) state.mode = saved.mode;
+      state.compoundHistory = sanitizeCompoundHistory(saved.compoundHistory);
       if (saved.batch && typeof saved.batch === "object") {
         state.batch = {
           ...state.batch,
@@ -154,20 +171,264 @@
     try {
       localStorage.setItem(
         STORAGE_KEY,
-        JSON.stringify({ mode: state.mode, batch: state.batch, individual: state.individual }),
+        JSON.stringify({
+          mode: state.mode,
+          batch: state.batch,
+          individual: state.individual,
+          compoundHistory: state.compoundHistory,
+        }),
       );
     } catch {
       // Ignore unavailable storage, including restrictive direct-file environments.
     }
   }
 
-  function populateCompoundPresets() {
-    elements.compoundPresets.replaceChildren();
-    for (const compound of compounds) {
-      const option = document.createElement("option");
-      option.value = compound.formula || compound.name;
-      option.label = compound.name;
-      elements.compoundPresets.append(option);
+  /* ---- Compound field --------------------------------------------------
+     A type-ahead over every name, formula and alias in the library, plus
+     an explicit save prompt. Both modes get one: the molar mass is the
+     same lookup whether you are weighing a batch or solving one sample.
+
+     Built as a factory rather than a singleton because the two modes keep
+     independent state and their own inputs.                              */
+
+  function createCompoundField({ nameInput, listEl, saveEl, savedEl, massInput, onApply }) {
+    let suggestions = [];
+    let active = -1;
+    let dismissed = null;
+    const optionId = (index) => `${listEl.id}-option-${index}`;
+
+    function close() {
+      suggestions = [];
+      active = -1;
+      listEl.replaceChildren();
+      listEl.hidden = true;
+      nameInput.setAttribute("aria-expanded", "false");
+      nameInput.removeAttribute("aria-activedescendant");
+    }
+
+    function renderSuggestions() {
+      suggestions = searchCompounds(compoundLibrary(), nameInput.value);
+      active = -1;
+      listEl.replaceChildren();
+      if (!suggestions.length) {
+        close();
+        return;
+      }
+
+      suggestions.forEach((compound, index) => {
+        const option = document.createElement("li");
+        option.className = "compound-option";
+        option.id = optionId(index);
+        option.setAttribute("role", "option");
+        option.setAttribute("aria-selected", "false");
+
+        const name = document.createElement("span");
+        name.className = "compound-option-name";
+        name.textContent = compound.name;
+
+        const detail = document.createElement("span");
+        detail.className = "compound-option-detail";
+        /* Show the alias when that, rather than the name, is what matched. */
+        const matched = compound.matchedTerm;
+        const viaAlias = matched && compoundSearchKey(matched) !== compoundSearchKey(compound.name);
+        detail.textContent = [compound.formula, viaAlias ? matched : null].filter(Boolean).join(" · ");
+
+        const mass = document.createElement("span");
+        mass.className = "compound-option-mass";
+        mass.textContent = `${compound.molarMass} g/mol`;
+
+        if (compound.remembered) {
+          const badge = document.createElement("span");
+          badge.className = "compound-option-badge";
+          badge.textContent = "saved";
+          name.append(" ", badge);
+        }
+
+        option.append(name, detail, mass);
+        /* mousedown, not click: blur would close the list first. */
+        option.addEventListener("mousedown", (event) => {
+          event.preventDefault();
+          apply(compound);
+        });
+        listEl.append(option);
+      });
+
+      listEl.hidden = false;
+      nameInput.setAttribute("aria-expanded", "true");
+    }
+
+    function highlight(index) {
+      const options = [...listEl.children];
+      if (!options.length) return;
+      active = (index + options.length) % options.length;
+      options.forEach((option, position) => {
+        const isActive = position === active;
+        option.classList.toggle("is-active", isActive);
+        option.setAttribute("aria-selected", isActive ? "true" : "false");
+        if (isActive) option.scrollIntoView({ block: "nearest" });
+      });
+      nameInput.setAttribute("aria-activedescendant", optionId(active));
+    }
+
+    function apply(compound) {
+      nameInput.value = compound.name;
+      close();
+      dismissed = null;
+      onApply(compound);
+      renderSave();
+    }
+
+    function saveKey(intent) {
+      return `${intent.action}:${compoundSearchKey(intent.name)}:${intent.molarMass}`;
+    }
+
+    /* Nothing is stored until this is answered, so a typo never becomes a
+       permanent entry. */
+    function renderSave() {
+      const intent = compoundSaveIntent(compoundLibrary(), nameInput.value, massInput.value);
+      saveEl.replaceChildren();
+
+      if (!intent || dismissed === saveKey(intent)) {
+        saveEl.hidden = true;
+        return;
+      }
+
+      const message = document.createElement("span");
+      message.className = "compound-save-text";
+      message.textContent =
+        intent.action === "save"
+          ? `Remember ${intent.name} at ${intent.molarMass} g/mol?`
+          : `Update ${intent.name} from ${intent.previous} to ${intent.molarMass} g/mol?`;
+
+      const confirm = document.createElement("button");
+      confirm.type = "button";
+      confirm.className = "compound-save-confirm";
+      confirm.textContent = intent.action === "save" ? "Remember" : "Update";
+      confirm.addEventListener("click", () => {
+        state.compoundHistory = rememberCompound(state.compoundHistory, {
+          name: intent.name,
+          molarMass: intent.molarMass,
+        });
+        dismissed = null;
+        savePreferences();
+        refreshCompoundFields();
+      });
+
+      const dismiss = document.createElement("button");
+      dismiss.type = "button";
+      dismiss.className = "compound-save-dismiss";
+      dismiss.textContent = "Not now";
+      dismiss.addEventListener("click", () => {
+        dismissed = saveKey(intent);
+        renderSave();
+      });
+
+      saveEl.append(message, confirm, dismiss);
+      saveEl.hidden = false;
+    }
+
+    /* Shown only once something has been saved, so the default screen
+       stays as quiet as it was. */
+    function renderSaved() {
+      savedEl.replaceChildren();
+      if (!state.compoundHistory.length) {
+        savedEl.hidden = true;
+        return;
+      }
+
+      const label = document.createElement("span");
+      label.className = "compound-saved-label";
+      label.textContent = "Saved";
+      savedEl.append(label);
+
+      for (const compound of state.compoundHistory) {
+        const item = document.createElement("span");
+        item.className = "compound-saved-item";
+
+        const pick = document.createElement("button");
+        pick.type = "button";
+        pick.className = "compound-saved-pick";
+        pick.textContent = compound.name;
+        pick.title = `${compound.name} — ${compound.molarMass} g/mol`;
+        pick.addEventListener("click", () => apply(compound));
+
+        const forget = document.createElement("button");
+        forget.type = "button";
+        forget.className = "compound-saved-forget";
+        forget.textContent = "×";
+        forget.setAttribute("aria-label", `Forget ${compound.name}`);
+        forget.addEventListener("click", () => {
+          state.compoundHistory = forgetCompound(state.compoundHistory, compound.name);
+          savePreferences();
+          refreshCompoundFields();
+        });
+
+        item.append(pick, forget);
+        savedEl.append(item);
+      }
+      savedEl.hidden = false;
+    }
+
+    nameInput.addEventListener("input", () => {
+      dismissed = null;
+      renderSuggestions();
+      renderSave();
+    });
+
+    nameInput.addEventListener("focus", () => {
+      if (nameInput.value.trim()) renderSuggestions();
+    });
+
+    nameInput.addEventListener("blur", close);
+
+    massInput.addEventListener("input", () => {
+      dismissed = null;
+      renderSave();
+    });
+
+    nameInput.addEventListener("keydown", (event) => {
+      const open = !listEl.hidden && suggestions.length > 0;
+      if (event.key === "ArrowDown") {
+        event.preventDefault();
+        if (!open) renderSuggestions();
+        highlight(active + 1);
+      } else if (event.key === "ArrowUp") {
+        event.preventDefault();
+        if (open) highlight(active - 1);
+      } else if (event.key === "Enter" && open && active >= 0) {
+        event.preventDefault();
+        apply(suggestions[active]);
+      } else if (event.key === "Escape" && open) {
+        event.preventDefault();
+        close();
+      }
+    });
+
+    close();
+    return { renderSave, renderSaved, close };
+  }
+
+  const compoundFields = [
+    createCompoundField({
+      nameInput: elements.compoundName,
+      listEl: elements.compoundSuggestions,
+      saveEl: elements.compoundSave,
+      savedEl: elements.compoundSaved,
+      massInput: elements.batchMolarMass,
+      onApply(compound) {
+        elements.batchMolarMass.value = String(compound.molarMass);
+        state.batch.compound = compound.name;
+        state.batch.molarMass = String(compound.molarMass);
+        updateBatchResults();
+        savePreferences();
+      },
+    }),
+  ];
+
+  function refreshCompoundFields() {
+    for (const field of compoundFields) {
+      field.renderSave();
+      field.renderSaved();
     }
   }
 
@@ -433,10 +694,9 @@
     const handler = () => {
       readBatchFields();
       if (input === elements.compoundName) {
-        const query = elements.compoundName.value.trim().toLowerCase();
-        const match = compounds.find((compound) =>
-          [compound.name, compound.formula].filter(Boolean).some((value) => value.toLowerCase() === query),
-        );
+        /* An exact hit still autofills, so typing a full name and tabbing
+           away works without touching the suggestion list. */
+        const match = findCompound(compoundLibrary(), elements.compoundName.value);
         if (match) {
           elements.batchMolarMass.value = String(match.molarMass);
           state.batch.molarMass = String(match.molarMass);
@@ -587,8 +847,8 @@
   }
 
   readPreferences();
-  populateCompoundPresets();
   populateFields();
+  refreshCompoundFields();
   renderSampleRows();
   updateBatchResults();
   renderMode();

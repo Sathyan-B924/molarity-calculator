@@ -232,6 +232,319 @@ textarea {
   grid-column: 1 / -1;
 }
 
+/* ---------- Compound combobox ----------
+   Type-ahead over names, formulas and aliases. The list is a popover so
+   the fields below it do not jump as suggestions appear. */
+.compound-combobox {
+  position: relative;
+}
+
+.compound-suggestions {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  max-height: 288px;
+  margin: 0;
+  padding: 4px;
+  overflow-y: auto;
+  list-style: none;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.compound-suggestions[hidden] {
+  display: none;
+}
+
+.compound-option {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: baseline;
+  column-gap: 12px;
+  padding: 8px 10px;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.compound-option:hover,
+.compound-option.is-active {
+  background: var(--raised);
+}
+
+/* Keyboard focus needs a cue that survives on top of the hover tint. */
+.compound-option.is-active {
+  box-shadow: inset 2px 0 0 var(--primary);
+}
+
+.compound-option-name {
+  grid-column: 1;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+/* Why the match appeared: formula, and the alias if that is what hit. */
+.compound-option-detail {
+  grid-column: 1;
+  grid-row: 2;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+.compound-option-detail:empty {
+  display: none;
+}
+
+.compound-option-mass {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.compound-option-badge {
+  padding: 1px 5px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  vertical-align: 1px;
+}
+
+/* ---------- Save prompt ----------
+   Nothing is stored until this is answered. */
+.compound-save {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--line-faint);
+  border-left: 3px solid var(--primary);
+  border-radius: var(--radius);
+  background: var(--raised);
+}
+
+.compound-save[hidden] {
+  display: none;
+}
+
+.compound-save-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 14px;
+}
+
+.compound-save-confirm,
+.compound-save-dismiss {
+  min-height: 34px;
+  padding: 6px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 14px;
+  cursor: pointer;
+  transition: border-color var(--ease), background var(--ease),
+    color var(--ease);
+}
+
+.compound-save-confirm {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--primary-fg);
+  font-weight: 600;
+}
+
+.compound-save-confirm:hover {
+  opacity: 0.9;
+}
+
+.compound-save-dismiss {
+  color: var(--muted);
+}
+
+.compound-save-dismiss:hover {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+
+/* ---------- Saved compounds ----------
+   Only rendered once something has been saved, so the default screen
+   stays as quiet as it was. */
+.compound-saved {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.compound-saved[hidden] {
+  display: none;
+}
+
+.compound-saved-label {
+  margin-right: 2px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.compound-saved-item {
+  display: inline-flex;
+  align-items: stretch;
+}
+
+.compound-saved-pick {
+  min-height: 32px;
+  padding: 4px 10px;
+  border: 1px dashed var(--line);
+  border-right: 0;
+  border-radius: var(--radius) 0 0 var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 14px;
+  cursor: pointer;
+  transition: border-color var(--ease), color var(--ease);
+}
+
+.compound-saved-pick:hover {
+  border-color: var(--ink);
+}
+
+.compound-saved-forget {
+  min-height: 32px;
+  padding: 0 8px;
+  border: 1px dashed var(--line);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  transition: border-color var(--ease), color var(--ease);
+}
+
+.compound-saved-forget:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+  align-content: start;
+}
+
+/* .field and .solver-field are themselves <label>s; their text is a child span. */
+.field > span,
+.solver-field > span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.field > span small {
+  font-size: inherit;
+  font-weight: 500;
+  opacity: 0.75;
+}
+
+/* Column labels embed unit symbols — never transform their case. */
+.sample-column-labels > span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  transition: border-color var(--ease);
+}
+
+input:hover,
+select:hover,
+textarea:hover {
+  border-color: var(--ink);
+}
+
+textarea {
+  min-height: 96px;
+  resize: vertical;
+  font-family: var(--mono);
+  font-size: 14px;
+}
+
+/* Numeric entry is evidence: aligned mono. */
+input[type="number"],
+input[inputmode="decimal"],
+input[inputmode="numeric"] {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Unit-suffixed and unit-select inputs share one control height. */
+.input-with-unit,
+.input-with-select {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+}
+
+.input-with-unit input {
+  padding-right: 56px;
+}
+
+/* Never transform case here: the content is a unit symbol. */
+.fixed-unit > span {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 13px;
+  pointer-events: none;
+}
+
+.input-with-select input {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.input-with-select select {
+  width: auto;
+  min-width: 74px;
+  margin-left: -1px;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  background: var(--raised);
+}
+
 /* ---------- Samples ---------- */
 .samples-heading {
   display: flex;
