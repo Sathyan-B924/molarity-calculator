@@ -1,4 +1,4 @@
-const CACHE_NAME = "molarity-calculator-v9";
+const CACHE_NAME = "molarity-calculator-v11";
 const APP_SHELL = [
   "./",
   "./index.html",

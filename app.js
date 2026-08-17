@@ -49,6 +49,10 @@
     usePastedWeights: document.querySelector("#usePastedWeights"),
     copyResults: document.querySelector("#copyResults"),
     clearBatch: document.querySelector("#clearBatch"),
+    individualCompound: document.querySelector("#individualCompound"),
+    individualSuggestions: document.querySelector("#individualSuggestions"),
+    individualSave: document.querySelector("#individualSave"),
+    individualSaved: document.querySelector("#individualSaved"),
     individualMass: document.querySelector("#individualMass"),
     individualMolarMass: document.querySelector("#individualMolarMass"),
     individualMolarity: document.querySelector("#individualMolarity"),
@@ -94,8 +98,10 @@
 
   const state = {
     mode: "batch",
+    /* The compound is a property of what is being made, not of the mode
+       it is being calculated in, so both modes share one. */
+    compound: "",
     batch: {
-      compound: "",
       molarMass: "",
       molarity: "",
       molarityUnit: "mM",
@@ -121,10 +127,11 @@
 
       if (["batch", "individual"].includes(saved.mode)) state.mode = saved.mode;
       state.compoundHistory = sanitizeCompoundHistory(saved.compoundHistory);
+      /* Older versions stored the compound under batch; carry it over. */
+      state.compound = String(saved.compound ?? saved.batch?.compound ?? "");
       if (saved.batch && typeof saved.batch === "object") {
         state.batch = {
           ...state.batch,
-          compound: String(saved.batch.compound ?? ""),
           molarMass: String(saved.batch.molarMass ?? ""),
           molarity: String(saved.batch.molarity ?? ""),
           molarityUnit: ["uM", "mM", "M"].includes(saved.batch.molarityUnit) ? saved.batch.molarityUnit : "mM",
@@ -173,6 +180,7 @@
         STORAGE_KEY,
         JSON.stringify({
           mode: state.mode,
+          compound: state.compound,
           batch: state.batch,
           individual: state.individual,
           compoundHistory: state.compoundHistory,
@@ -408,6 +416,9 @@
     return { renderSave, renderSaved, close };
   }
 
+  /* Batch sets its molar mass directly. Individual routes through an input
+     event so the solver's calculated-field bookkeeping runs exactly as it
+     would if the value had been typed by hand. */
   const compoundFields = [
     createCompoundField({
       nameInput: elements.compoundName,
@@ -416,14 +427,48 @@
       savedEl: elements.compoundSaved,
       massInput: elements.batchMolarMass,
       onApply(compound) {
-        elements.batchMolarMass.value = String(compound.molarMass);
-        state.batch.compound = compound.name;
-        state.batch.molarMass = String(compound.molarMass);
+        setSharedCompound(compound.name, compound.molarMass);
         updateBatchResults();
         savePreferences();
       },
     }),
+    createCompoundField({
+      nameInput: elements.individualCompound,
+      listEl: elements.individualSuggestions,
+      saveEl: elements.individualSave,
+      savedEl: elements.individualSaved,
+      massInput: elements.individualMolarMass,
+      onApply(compound) {
+        setSharedCompound(compound.name, compound.molarMass);
+        savePreferences();
+      },
+    }),
   ];
+
+  /* One compound, mirrored into both modes. Passing a molar mass sets it
+     in both too — a shared compound showing two different masses would be
+     worse than not sharing at all. Pass null to leave the masses alone,
+     which is the case while a name is still being typed.
+
+     Individual's mass goes through a synthetic input event so the solver's
+     calculated-field bookkeeping runs exactly as it would on real typing. */
+  function setSharedCompound(name, molarMass) {
+    state.compound = name;
+    if (elements.compoundName.value !== name) elements.compoundName.value = name;
+    if (elements.individualCompound.value !== name) elements.individualCompound.value = name;
+
+    if (molarMass !== null && molarMass !== undefined) {
+      const mass = String(molarMass);
+      state.batch.molarMass = mass;
+      elements.batchMolarMass.value = mass;
+
+      if (elements.individualMolarMass.value !== mass) {
+        elements.individualMolarMass.value = mass;
+        elements.individualMolarMass.dispatchEvent(new Event("input", { bubbles: true }));
+      }
+    }
+    refreshCompoundFields();
+  }
 
   function refreshCompoundFields() {
     for (const field of compoundFields) {
@@ -439,7 +484,7 @@
   }
 
   function populateFields() {
-    elements.compoundName.value = state.batch.compound;
+    elements.compoundName.value = state.compound;
     elements.batchMolarMass.value = state.batch.molarMass;
     elements.batchMolarity.value = state.batch.molarity;
     elements.batchMolarityUnit.value = state.batch.molarityUnit;
@@ -447,13 +492,13 @@
     elements.batchVolumeUnit.value = state.batch.volumeUnit;
     elements.batchDecimals.value = String(state.batch.decimals);
 
+    elements.individualCompound.value = state.compound;
     for (const [field, input] of Object.entries(individualInputs)) input.value = state.individual.values[field];
     for (const [field, select] of Object.entries(individualUnitInputs)) select.value = state.individual.units[field];
     elements.individualDecimals.value = String(state.individual.decimals);
   }
 
   function readBatchFields() {
-    state.batch.compound = elements.compoundName.value;
     state.batch.molarMass = elements.batchMolarMass.value;
     state.batch.molarity = elements.batchMolarity.value;
     state.batch.molarityUnit = elements.batchMolarityUnit.value;
@@ -663,7 +708,7 @@
     const massLabel = unitLabel(state.batch.massUnit);
     const volumeLabel = unitLabel(state.batch.volumeUnit);
     const lines = [];
-    if (state.batch.compound.trim()) lines.push(`Compound\t${state.batch.compound.trim()}`);
+    if (state.compound.trim()) lines.push(`Compound\t${state.compound.trim()}`);
     lines.push(`Molar mass\t${state.batch.molarMass} g/mol`);
     lines.push(`Target molarity\t${state.batch.molarity} ${unitLabel(state.batch.molarityUnit)}`);
     lines.push("");
@@ -696,11 +741,10 @@
       if (input === elements.compoundName) {
         /* An exact hit still autofills, so typing a full name and tabbing
            away works without touching the suggestion list. */
-        const match = findCompound(compoundLibrary(), elements.compoundName.value);
-        if (match) {
-          elements.batchMolarMass.value = String(match.molarMass);
-          state.batch.molarMass = String(match.molarMass);
-        }
+        const typed = elements.compoundName.value;
+        const match = findCompound(compoundLibrary(), typed);
+        if (match) setSharedCompound(match.name, match.molarMass);
+        else setSharedCompound(typed, null);
       }
       if (input === elements.batchMassUnit) renderSampleRows();
       updateBatchResults();
@@ -748,13 +792,23 @@
 
   elements.clearBatch.addEventListener("click", () => {
     if (!window.confirm("Clear compound, values, and sample weights?")) return;
-    state.batch.compound = "";
+    state.compound = "";
     state.batch.molarMass = "";
     state.batch.molarity = "";
     state.batch.rows = defaultRows();
     populateFields();
     renderSampleRows();
     updateBatchResults();
+    savePreferences();
+  });
+
+  /* Typing a full compound name still fills the molar mass, so the field
+     works without ever opening the suggestion list. */
+  elements.individualCompound.addEventListener("input", () => {
+    const typed = elements.individualCompound.value;
+    const match = findCompound(compoundLibrary(), typed);
+    if (match) setSharedCompound(match.name, match.molarMass);
+    else setSharedCompound(typed, null);
     savePreferences();
   });
 
@@ -799,10 +853,13 @@
 
   elements.clearIndividual.addEventListener("click", () => {
     state.individual.values = { mass: "", molarMass: "", molarity: "", volume: "" };
+    state.compound = "";
     state.individual.calculatedField = null;
     for (const input of Object.values(individualInputs)) input.value = "";
+    elements.individualCompound.value = "";
     renderCalculatedField();
     setIndividualStatus("");
+    refreshCompoundFields();
     savePreferences();
   });
 

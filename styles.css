@@ -880,3 +880,12 @@ footer {
     animation-duration: 0.01ms !important;
   }
 }
+
+/* The compound field sits above the solver grid in Individual mode. */
+.solver-compound {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--line-faint);
+}

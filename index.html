@@ -156,6 +156,31 @@
       </section>
 
       <section id="individualMode" class="calculator-panel" aria-label="Individual calculator" hidden>
+        <label class="field compound-field solver-compound">
+          <span>Compound <small>optional</small></span>
+          <div class="compound-combobox">
+            <input
+              id="individualCompound"
+              type="text"
+              placeholder="Start typing — e.g. borohydride, 4-NP, tris"
+              autocomplete="off"
+              role="combobox"
+              aria-expanded="false"
+              aria-controls="individualSuggestions"
+              aria-autocomplete="list"
+            />
+            <ul
+              id="individualSuggestions"
+              class="compound-suggestions"
+              role="listbox"
+              aria-label="Compound suggestions"
+              hidden
+            ></ul>
+          </div>
+          <div id="individualSave" class="compound-save" role="status" hidden></div>
+          <div id="individualSaved" class="compound-saved" hidden></div>
+        </label>
+
         <div class="solver-fields">
           <label class="solver-field" data-field="mass">
             <span>Mass</span>
